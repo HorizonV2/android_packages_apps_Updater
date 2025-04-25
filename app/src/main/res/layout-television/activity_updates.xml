@@ -121,14 +121,14 @@
                 android:orientation="vertical"
                 android:gravity="center">
 
-                <org.lineageos.updater.RandomImageView
+                <org.horizon.updater.RandomImageView
                     android:id="@+id/no_updates_image"
                     android:layout_width="350dp"
                     android:layout_height="350dp"
                     android:scaleType="centerInside"
                     android:src="@drawable/no_updates_1" />
 
-                <org.lineageos.updater.RandomTextView
+                <org.horizon.updater.RandomTextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
