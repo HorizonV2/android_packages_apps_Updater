@@ -87,10 +87,10 @@ public class Utils {
         Update update = new Update();
         update.setTimestamp(object.getLong("datetime"));
         update.setName(object.getString("filename"));
-        update.setDownloadId(object.getString("id"));
-        update.setType(object.getString("romtype"));
+        update.setDownloadId(object.getString("md5"));
+        update.setType(object.getString("buildtype"));
         update.setFileSize(object.getLong("size"));
-        update.setDownloadUrl(object.getString("url"));
+        update.setDownloadUrl(object.getString("download"));
         update.setVersion(object.getString("version"));
         return update;
     }
@@ -176,7 +176,14 @@ public class Utils {
         String incrementalVersion = SystemProperties.get(Constants.PROP_BUILD_VERSION_INCREMENTAL);
         String device = SystemProperties.get(Constants.PROP_NEXT_DEVICE,
                 SystemProperties.get(Constants.PROP_DEVICE));
-        String type = SystemProperties.get(Constants.PROP_RELEASE_TYPE).toLowerCase(Locale.ROOT);
+        String buildDisplayVersion = SystemProperties.get(Constants.PROP_DISPLAY_VERSION, "");
+        String variant;
+
+        if (buildDisplayVersion.toLowerCase().contains("vanilla")) {
+            variant = "VANILLA";
+        } else {
+            variant = "GAPPS";
+        }
 
         String serverUrl = SystemProperties.get(Constants.PROP_UPDATER_URI);
         if (serverUrl.trim().isEmpty()) {
@@ -184,8 +191,7 @@ public class Utils {
         }
 
         return serverUrl.replace("{device}", device)
-                .replace("{type}", type)
-                .replace("{incr}", incrementalVersion);
+                .replace("{variant}", variant);
     }
 
     public static String getUpgradeBlockedURL(Context context) {
@@ -195,9 +201,7 @@ public class Utils {
     }
 
     public static String getChangelogURL(Context context) {
-        String device = SystemProperties.get(Constants.PROP_NEXT_DEVICE,
-                SystemProperties.get(Constants.PROP_DEVICE));
-        return context.getString(R.string.menu_changelog_url, device);
+        return context.getString(R.string.menu_changelog_url);
     }
 
     public static void triggerUpdate(Context context, String downloadId) {
