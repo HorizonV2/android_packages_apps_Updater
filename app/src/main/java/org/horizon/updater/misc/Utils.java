@@ -52,12 +52,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Utils {
 
     private static final String TAG = "Utils";
+
+    private static String mMaintainer;
+    private static String mForum;
 
     private Utils() {
     }
@@ -92,11 +97,18 @@ public class Utils {
         update.setFileSize(object.getLong("size"));
         update.setDownloadUrl(object.getString("download"));
         update.setVersion(object.getString("version"));
+        mMaintainer = object.getString("maintainer");
+        mForum = object.getString("support");
         return update;
     }
 
     public static boolean isCompatible(UpdateBaseInfo update) {
-        if (update.getVersion().compareTo(SystemProperties.get(Constants.PROP_BUILD_VERSION)) < 0) {
+        String currentVersion = SystemProperties.get(Constants.PROP_BUILD_VERSION);
+        String updateVersion = update.getVersion();
+        String currentVersionMain = extractVersionMain(currentVersion);
+        String updateVersionMain = extractVersionMain(updateVersion);
+
+        if (updateVersionMain.compareTo(currentVersionMain) < 0) {
             Log.d(TAG, update.getName() + " is older than current Android version");
             return false;
         }
@@ -125,6 +137,17 @@ public class Utils {
         } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
             return false;
         }
+    }
+    
+    private static String extractVersionMain(String version) {
+        String regex = "v(\\d+\\.\\d+)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(version);
+    
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return "0.0";
     }
 
     public static boolean canInstall(UpdateBaseInfo update) {
@@ -168,7 +191,6 @@ public class Utils {
     }
 
     public static String getServerURL(Context context) {
-        String incrementalVersion = SystemProperties.get(Constants.PROP_BUILD_VERSION_INCREMENTAL);
         String device = SystemProperties.get(Constants.PROP_NEXT_DEVICE,
                 SystemProperties.get(Constants.PROP_DEVICE));
         String buildDisplayVersion = SystemProperties.get(Constants.PROP_DISPLAY_VERSION, "");
@@ -179,11 +201,8 @@ public class Utils {
         } else {
             variant = "GAPPS";
         }
-
-        String serverUrl = SystemProperties.get(Constants.PROP_UPDATER_URI);
-        if (serverUrl.trim().isEmpty()) {
-            serverUrl = context.getString(R.string.updater_server_url);
-        }
+        
+        String serverUrl = context.getString(R.string.updater_server_url);
 
         return serverUrl.replace("{device}", device)
                 .replace("{variant}", variant);
@@ -411,7 +430,7 @@ public class Utils {
     public static int getUpdateCheckSetting(Context context) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         return preferences.getInt(Constants.PREF_AUTO_UPDATES_CHECK_INTERVAL,
-                Constants.AUTO_UPDATES_CHECK_INTERVAL_WEEKLY);
+                Constants.AUTO_UPDATES_CHECK_INTERVAL_DAILY);
     }
 
     public static boolean isUpdateCheckEnabled(Context context) {
@@ -420,10 +439,10 @@ public class Utils {
 
     public static long getUpdateCheckInterval(Context context) {
         switch (Utils.getUpdateCheckSetting(context)) {
+        	default:
             case Constants.AUTO_UPDATES_CHECK_INTERVAL_DAILY:
                 return AlarmManager.INTERVAL_DAY;
             case Constants.AUTO_UPDATES_CHECK_INTERVAL_WEEKLY:
-            default:
                 return AlarmManager.INTERVAL_DAY * 7;
             case Constants.AUTO_UPDATES_CHECK_INTERVAL_MONTHLY:
                 return AlarmManager.INTERVAL_DAY * 30;
@@ -432,5 +451,13 @@ public class Utils {
 
     public static boolean isRecoveryUpdateExecPresent() {
         return new File(Constants.UPDATE_RECOVERY_EXEC).exists();
+    }
+
+    public static String getMaintainer() {
+        return mMaintainer;
+    }
+ 
+    public static String getForum() {
+        return mForum;
     }
 }
