@@ -108,19 +108,16 @@ public class Utils {
         String currentVersionMain = extractVersionMain(currentVersion);
         String updateVersionMain = extractVersionMain(updateVersion);
 
-        if (updateVersionMain.compareTo(currentVersionMain) < 0) {
-            Log.d(TAG, update.getName() + " is older than current Android version");
-            return false;
-        }
         if (!SystemProperties.getBoolean(Constants.PROP_UPDATER_ALLOW_DOWNGRADING, false) &&
                 update.getTimestamp() <= SystemProperties.getLong(Constants.PROP_BUILD_DATE, 0)) {
             Log.d(TAG, update.getName() + " is older than/equal to the current build");
             return false;
         }
-        if (!update.getType().equalsIgnoreCase(SystemProperties.get(Constants.PROP_RELEASE_TYPE))) {
+        if (!update.getType().equalsIgnoreCase("OFFICIAL")) {
             Log.d(TAG, update.getName() + " has type " + update.getType());
             return false;
         }
+        
         return true;
     }
 
@@ -152,10 +149,7 @@ public class Utils {
 
     public static boolean canInstall(UpdateBaseInfo update) {
         return (SystemProperties.getBoolean(Constants.PROP_UPDATER_ALLOW_DOWNGRADING, false) ||
-                update.getTimestamp() > SystemProperties.getLong(Constants.PROP_BUILD_DATE, 0)) &&
-                compareVersions(
-                        update.getVersion(),
-                        SystemProperties.get(Constants.PROP_BUILD_VERSION));
+                update.getTimestamp() > SystemProperties.getLong(Constants.PROP_BUILD_DATE, 0));
     }
 
     public static List<UpdateInfo> parseJson(File file, boolean compatibleOnly)
@@ -209,9 +203,7 @@ public class Utils {
     }
 
     public static String getUpgradeBlockedURL(Context context) {
-        String device = SystemProperties.get(Constants.PROP_NEXT_DEVICE,
-                SystemProperties.get(Constants.PROP_DEVICE));
-        return context.getString(R.string.blocked_update_info_url, device);
+        return context.getString(R.string.blocked_update_info_url);
     }
 
     public static String getChangelogURL(Context context) {
